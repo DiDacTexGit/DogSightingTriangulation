@@ -1,0 +1,10 @@
+var lastupdated = new Date("August 31, 2018 16:50:50");
+var points =[
+  {
+    "new": false,
+    "street": "523 BOLANDER AVE",
+    "lat": "39.742082",
+    "sighting": true,
+    "lon": "-84.203151",
+    "User_01": "First User"
+  }];
