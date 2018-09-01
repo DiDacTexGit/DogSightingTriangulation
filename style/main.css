@@ -114,6 +114,8 @@ p.footertext {
 }
 p.fineprint {
   font-size: 11px;
+  color:#049ba2;
+  text-align: center;
 }
 a.header {
   text-decoration: none;

@@ -267,7 +267,7 @@ $("document").ready(function() {
     $('#last_update').text(lastupdated);
 
     createMap();
-    //initMarkers();
+    initMarkers();
 
   }
 
