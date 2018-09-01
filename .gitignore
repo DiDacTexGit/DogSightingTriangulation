@@ -1,0 +1,7 @@
+node_modules
+npm-debug*
+bower_components
+*.swp
+.tmp
+.DS_Store
+explore/data/college_data.csv
