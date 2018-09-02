@@ -1,277 +1,214 @@
 $("document").ready(function() {
   // all the markers
-  var allMarkers = [];
-
-  // search index for the markers
-  var markerSearch = [];
-
-  // flag for only showing new properties
-  var onlyNew = false;
-
+  var allmarkers = [];
+  // ----------------Markers ---------------------
+  var red, blue, na, allm; // These will be the markers for map
+  var bluemarker  = [];  //Seperate the markers into red/blue/other
+  var redmarker   = [];
+  var namarker    = [];
+  var overlaymarkers;
+  var allmarker;
+  var baseMaps;
   // map context
-  var map;
-  var markers;
+  var mymap;
+  var DAYTON = [39.7589, -84.1916];  // Var to point the map too
+  var Streetmap, Stamen_Terrain, Esri_WorldImagery, Roads;
+  var start;
 
-  /// Link Helper functions
-  function generateTreasurersLink(parcelid){
-    return "http://www.mctreas.org/master.cfm?parid=" + parcelid.replace(" ", "%20") + "&taxyr=2016&own1=SMITH";
-  };
 
-  function generateGISLink(parcelid){
-    return "http://www.mcegisohio.org/VPWeb/VPWeb.html?config=aud";
-  };
-
-  /// typeahead helper
-  function substringMatcher(strs) {
-    return function findMatches(q, cb) {
-      var matches, substrRegex;
-      // an array that will be populated with substring matches
-      matches = [];
-
-      // regex used to determine if a string contains the substring `q`
-      substrRegex = new RegExp(q, 'i');
-
-      // iterate through the pool of strings and for any string that
-      // contains the substring `q`, add it to the `matches` array
-
-      // Practically clearing the previous search results
-      // Does using .map change the performance?
-      for (var i = 0; i < allMarkers.length; i++) {
-        allMarkers[i].found = false;
-      }
-
-      $.each(strs, function(i, str) {
-        if (substrRegex.test(str)) {
-          // the typeahead jQuery plugin expects suggestions to a
-          // JavaScript object, refer to typeahead docs for more info
-
-          // Update the found attribute on the master marker list
-          // This will later used to update the markers on the map
-          allMarkers[i % allMarkers.length].found = true;
-          matches.push({ value: str });
-        }
-      });
-
-      setMarkers();
-      cb(matches);
+  function createMap(){
+    //-------------Different Types of Maps---------
+    Streetmap = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 22,
+      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    });//.addTo(mymap);
+    Stamen_Terrain = L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
+  	  attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  	  subdomains: 'abcd',
+  	  minZoom: 0,
+  	  maxZoom: 18,
+  	  ext: 'png'
+    });
+    Roads = L.tileLayer('http://{s}.tile.openstreetmap.se/hydda/roads_and_labels/{z}/{x}/{y}.png', {
+ 	    attribution: 'Tiles courtesy of <a href="http://openstreetmap.se/" target="_blank">OpenStreetMap Sweden</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    });
+    // https: also suppported.
+    Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+	   attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+     maxZoom:18
+    });
+    //---------------------------------------
+    // Map choices.----------
+    baseMaps = {
+     "Street":Streetmap,
+     "TopoMap":Stamen_Terrain,
+     "WorldImagery":Esri_WorldImagery,
+     "Roads_Labels":Roads
     };
-  };
-
-  /* Highlight search box text on click */
-  $("#addressInput").click(function () {
-    $(this).select();
-  });
-
-  /* Prevent hitting enter from refreshing the page */
-  $("#addressInput").keypress(function (e) {
-    if (e.which == 13) {
-      e.preventDefault();
-    }
-  });
-
-  $("#addressInput").on('typeahead:selected', function(evt, item) {
-    // User selected a text from the search results box
-    // We need to update the map with the markers matching exactly that text
-    // If there's only one result, we will select that property
-    // This is going to be a subset of all the markers on the map,
-    //    however Leaflet update efficiency should be considered.
-
-    var value = item.value;
-    // Clearing the previous search results and searching for the selected marker(s)
-    for (var i = 0; i < allMarkers.length; i++) {
-      allMarkers[i].found = false;
-      if (allMarkers[i].parcelid === value || allMarkers[i].address === value) allMarkers[i].found = true;
-    }
-
-    // Let's update the markers on the map to selected markers
-    // This will also select the marker if there's only one result
-    setMarkers();
-  });
-
-  $("#addressInput").typeahead({
-    minLength: 0,
-    highlight: true,
-    hint: false
-  }, {
-    name: "AllMarkers",
-    displayKey: "value",
-    source: substringMatcher(markerSearch),
-    limit: 15,
-    templates: {
-      empty: '<div class="empty-message">No Lot Links eligible properties were found. <br /><span class="error-text">If you provided a complete address, then the property is not eligible for Lot Links at this time.</span></div>'
-    }
-  });
-
-  /// Lookup based on typeahead and updating right bar
-  function selectedProperty(address,parcelid, claimed) {
-    $('#selectedAddress').text(address);
-    $('#selectedParcelId').text(parcelid);
-    $('#linkToTreasuresSite').html("<a href=\""
-      + generateTreasurersLink(parcelid)
-      + "\" target=\"_blank\">View Property on Treasurer's Site</a>");
-    $('#linkToGISSite').html("<a href=\""
-      + generateGISLink(parcelid)
-      + "\" target=\"_blank\">View Property on GIS Site</a>");
-    if (claimed) {
-      $('#claimedWarning').html("This property has been claimed. It is not available at this time.");
-    } else {
-      $('#claimedWarning').html("");
-    }
-    $(".introcontainer").css("margin-top", "255px");
-  }
-
-  function clearMarkers() {
-    // Let's not update the map if all the markers are already in there
-    if (markers.getLayers().length === allMarkers.length) return;
-
-    // Leaflet says it's more efficient to remove all the markers and then inseart the new ones.
-    markers.clearLayers();
-
-    // Let's put everything back onto the map
-    // We should also set the found attributes to false on the master list
-    var cleanMarkers = [];
-    for (var i = 0; i < allMarkers.length; i++) {
-      allMarkers[i].found = false;
-      // We are already looping over all the markers
-      // It might be more efficient to update cleanMarkers in this loop
-      cleanMarkers.push(allMarkers[i]);
-    }
-    markers.addLayers(cleanMarkers);
-  }
-
-  function setMarkers() {
-    // Original design calls for putting all the markers back if there's nothing found during the search
-    // This feature is removed due to search slugishness
-
-    // Let's find all the found markers, filtering for newness if necessary
-    var foundMarkers = [];
-    for (var i = 0; i < allMarkers.length; i++) {
-      if (allMarkers[i].found &&
-           (!onlyNew || (onlyNew && allMarkers[i].new))) {
-        foundMarkers.push(allMarkers[i]);
+    //
+    // Set the Map ------------------------
+    mymap = L.map('map',{
+          layers:[Streetmap]
+        }).setView(DAYTON, 15);
+  // L.control.layers(baseMaps).addTo(mymap);
+   }
+function getmarkers(){
+  $.get('/data/callins.txt', function(data) {
+      // jQuery gives us back the data as a big string, so the first step
+      // is to split on the newlines
+      var lines     = data.split('\n');
+      var i, values;
+      var len       = lines.length;
+      var locations = [];
+      for (i = 0; i < len; i++) {
+          // for each line, split on the tab character. The lat and long
+          // values are in the first and second positions respectively.
+          values    = lines[i].split('\t');
+          // ignore header line of the csv as well as the ending newline
+          // keep lines that have a numeric value in the first, second slot
+          if (!isNaN(values[0]) && !isNaN(values[1])) {
+              locations.push({
+                  latitude:   Number(values[0]),
+                  longitude:  Number(values[1]),
+                  name:         values[2],
+                  description:  values[3],
+                  team:         values[4],
+                  phone:        values[5],
+                  icon:         values[6]
+              });
+          }
       }
+      // infoTemplate is a string template for use with L.Util.template()
+      var infoTemplate = '<h2>{name}</h2><p>Info: {description}</p><p>Phone: {phone}</p>';
+      // Ok, now we have an array of locations. We can now plot those on our map!
+      len      = locations.length;
+      var location;
+      for (i = 0; i < len; i++) {
+          location  = locations[i];
+          // Here we're defining a new icon to use on our map.
+          var icondir     = 'icons/';
+          var iconpre     = '.png';
+          var iconname    = icondir.concat(location.icon,iconpre);
+          var customIcon  = L.icon({
+                     iconUrl: iconname,
+                     iconSize: [65,65]
+                 });
+          var marker;
+              marker      = L.marker([location.latitude, location.longitude], {
+                  icon: customIcon
+              });
+              marker.bindPopup(L.Util.template(infoTemplate,location));
+          if (location.team      == "Blue"){
+            bluemarker.push(marker);
+          }else if (location.team == "Red") {
+              redmarker.push(marker);
+          }else{
+              namarker.push(marker);
+          }
+      }
+    red   = L.markerClusterGroup().addLayers(redmarker);
+    blue  =  L.markerClusterGroup().addLayers(bluemarker);
+    //blue  = L.layerGroup(bluemarker);
+    na    =  L.markerClusterGroup().addLayers(namarker);
+    allmarker = redmarker.concat(bluemarker);
+    allmarker = allmarker.concat(namarker);
+    allm  =  L.markerClusterGroup().addLayers(allmarker);
+    allm.addTo(mymap);
+
+    // Now we can zoom the map to the extent of the markers
+    mymap.fitBounds(allm.getBounds());
+
+    //-------------Setting up the map ---------------
+    overlaymarkers={
+        "Red Team": red,
+        //"Blue Team":blue,
+        "<img src='icons/female_blue_sm.png'/>":blue,
+        "Support":na,
+        "All": allm
     }
-    // Let's not update the map if we found all markers in the search and they are already on the map
-    if (foundMarkers.length === allMarkers.length && markers.getLayers().length === allMarkers.length) return;
+    //L.control.layers(overlaymarkers, baseMaps).addTo(mymap);
+    });//$.get()
+  }
+  function getnewLat(latitude,dist){
+    //distance in meters
+    var r_earth = 6378 //km
+    dist = dist/1000; //convert to meters
+    var new_latitude  = latitude  + (dist / r_earth) * (180 / Math.PI);
+    //var new_longitude = longitude + (dx / r_earth) * (180 / pi) / cos(latitude * pi/180);
+    return new_latitude;
+  }
+  function getnewLong(longitude,latitude,dist){
+    //distance in meters
+    var r_earth = 6378 ;//km
+    dist = dist/1000; //convert to meters
+    var new_longitude = longitude + (dist / r_earth) * (180 / Math.PI) / Math.cos(latitude * Math.PI/180);
+    return new_logitude;
+  }
+  function toRad(n) {//https://gist.github.com/mathiasbynens/354587
+ return n * Math.PI / 180;
+};
+function toDeg(n) {//https://gist.github.com/mathiasbynens/354587
+ return n * 180 / Math.PI;
+};
+function destVincenty(lat1, lon1, brng, dist) {//https://gist.github.com/mathiasbynens/354587
+ var a = 6378137,
+     b = 6356752.3142,
+     f = 1 / 298.257223563, // WGS-84 ellipsiod
+     s = dist,
+     alpha1 = toRad(brng),
+     sinAlpha1 = Math.sin(alpha1),
+     cosAlpha1 = Math.cos(alpha1),
+     tanU1 = (1 - f) * Math.tan(toRad(lat1)),
+     cosU1 = 1 / Math.sqrt((1 + tanU1 * tanU1)), sinU1 = tanU1 * cosU1,
+     sigma1 = Math.atan2(tanU1, cosAlpha1),
+     sinAlpha = cosU1 * sinAlpha1,
+     cosSqAlpha = 1 - sinAlpha * sinAlpha,
+     uSq = cosSqAlpha * (a * a - b * b) / (b * b),
+     A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq))),
+     B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq))),
+     sigma = s / (b * A),
+     sigmaP = 2 * Math.PI;
+ while (Math.abs(sigma - sigmaP) > 1e-12) {
+  var cos2SigmaM = Math.cos(2 * sigma1 + sigma),
+      sinSigma = Math.sin(sigma),
+      cosSigma = Math.cos(sigma),
+      deltaSigma = B * sinSigma * (cos2SigmaM + B / 4 * (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) - B / 6 * cos2SigmaM * (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)));
+  sigmaP = sigma;
+  sigma = s / (b * A) + deltaSigma;
+ };
+ var tmp = sinU1 * sinSigma - cosU1 * cosSigma * cosAlpha1,
+     lat2 = Math.atan2(sinU1 * cosSigma + cosU1 * sinSigma * cosAlpha1, (1 - f) * Math.sqrt(sinAlpha * sinAlpha + tmp * tmp)),
+     lambda = Math.atan2(sinSigma * sinAlpha1, cosU1 * cosSigma - sinU1 * sinSigma * cosAlpha1),
+     C = f / 16 * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha)),
+     L = lambda - (1 - C) * f * sinAlpha * (sigma + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM))),
+     revAz = Math.atan2(sinAlpha, -tmp); // final bearing
+  var LatLon =  [toDeg(lat2), lon1 + toDeg(L)];
+ return LatLon;
+};
+  var marker = L.marker([39.7316757, -84.17587]);//.addTo(mymap);
 
-    // Marker attributes such as .claim and .new can be used here to filter search results.
-
-    // Leaflet says it's more efficient to remove all the markers and then insert the new ones.
-    markers.clearLayers();
-    markers.addLayers(foundMarkers);
-
-    // Let's select the marker if there's only one of them is found
-    if (foundMarkers.length === 1 ) {
-      selectedProperty(foundMarkers[0].address, foundMarkers[0].parcelid, foundMarkers[0].claimed);
-    }
+  function drawLine(){
+      var raw_dist = 500;
+  
+      var angle = 25;
+      //var end_x = marker.getLatLng().lng // * Math.cos(angle * Math.PI / 180);
+      //var end_y = start.getLatLng().lat;// + length// * Math.sin(angle * Math.PI / 180);
+      LatLon = destVincenty(marker.getLatLng().lat, marker.getLatLng().lng, angle,raw_dist);
+      //var LatLon=[39.7316757, -84.27587];
+      //var end = L.marker([LatLon[0],LatLon[1]]).addTo(mymap);
+      var end = L.marker([LatLon[0], LatLon[1]]).addTo(mymap);
+      var line = L.polyline([marker.getLatLng(), end.getLatLng()]).addTo(mymap);
   }
 
-  function showOnlyNewProperties(showNew) {
-    onlyNew = showNew;
-    setMarkers();
-  }
+   function initSite() {
+     $('#last_update').text(lastupdated);
+     //  getmarkers();
+     createMap();
+     getmarkers();
+     drawLine();
+   }
 
-  // NEEDS UPDATE: Broken by search update
-  //Filter new properties
-  $("#showOnlyNewProperties").change(function () {
-    $(this).is(":checked") ? showOnlyNewProperties(true) : showOnlyNewProperties(false);
-  });
-
-  /// Site initialization
-  function createMap() {
-    var satTiles = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 18,
-      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-    }),
-    mapTiles = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors, Points &copy 2012 LINZ'
-    }),
-    latlng = L.latLng(39.758948, -84.191607);
-    map = L.map('map', { center: latlng, zoom: 10, layers: [mapTiles] });
-    L.control.layers({"Map":mapTiles,"Satellite":satTiles}).addTo(map);
-  }
-
-  function popup(street, parcel) {
-    return '<p>' + street + '</p>' +
-           '<p>' + parcel + '</p>';
-  }
-
-  function initMarkers() {
-
-    var redMarker = L.AwesomeMarkers.icon({
-      icon: 'close-round',
-      markerColor: 'red',
-      prefix: 'ion'
-    });
-
-    var blueMarker = L.AwesomeMarkers.icon({
-      icon: 'home',
-      markerColor: 'blue',
-      prefix: 'ion'
-    });
-
-    var lotMarker = L.AwesomeMarkers.icon({
-      icon: 'leaf',
-      markerColor: 'blue',
-      prefix: 'ion'
-    });
-
-    // points object is loaded from the data file
-    for (var i = 0; i < points.length; i++) {
-      var a = points[i];
-      var title = a.street;
-      var icon = blueMarker;
-      if (a.lot)
-        icon = lotMarker;
-      if (a.claimed)
-        icon = redMarker;
-
-      var marker = L.marker(L.latLng(parseFloat(a.lat), parseFloat(a.lon)), { title: title, icon: icon });
-
-      marker.address = a.street;
-      marker.parcelid = a.parcelid;
-      marker.claimed = a.claimed;
-      marker.new = a.new;
-      marker.found = true; // Helper attribute for the search function.
-
-      marker.on('click', function(e) {
-        selectedProperty(e.target.address, e.target.parcelid, e.target.claimed);
-      });
-
-      marker.bindPopup(popup(title, a.parcelid));
-      allMarkers.push(marker);
-    }
-
-
-    // markerSearch array contains the search terms
-    // Its size should be kept as multiples of allMarkers.length
-    for (var i = 0; i < allMarkers.length; i++) {
-        markerSearch.push(allMarkers[i].parcelid);
-    }
-    for (var i = 0; i < allMarkers.length; i++) {
-        markerSearch.push(allMarkers[i].address);
-    }
-
-    markers = L.markerClusterGroup({
-      chunkedLoading: true,
-      chunkInterval: 20,
-      chunkDelay: 50
-    });
-
-    markers.addLayers(allMarkers);
-    map.addLayer(markers);
-  }
-
-  function initSite() {
-    $('#last_update').text(lastupdated);
-
-    createMap();
-    initMarkers();
-
-  }
-
-  initSite();
+ initSite();
 
   //HTML5 input placeholder fix for < ie10
   $('input, textarea').placeholder();
@@ -303,8 +240,9 @@ $("document").ready(function() {
       $("#"+expandFAQ+" *").show("fast");
       $("#"+clickedFAQ+" h4 span.expand-icon").replaceWith("<span class='expanded-icon'>&#8210;</span>");
     }
-
   }
+
+
 
   $("[id^=FAQ-]").click( function() {
     clickedFAQ(this);
