@@ -52,7 +52,12 @@ function drawLine(bluemarker, mymap){
         //var end_x = marker.getLatLng().lng // * Math.cos(angle * Math.PI / 180);
         //var end_y = start.getLatLng().lat;// + length// * Math.sin(angle * Math.PI / 180);
         LatLon = destVincenty(marker.getLatLng().lat, marker.getLatLng().lng, angle,raw_dist);
-        var end = L.marker([LatLon[0], LatLon[1]]).addTo(mymap);
-        var line = L.polyline([marker.getLatLng(), end.getLatLng()]).addTo(mymap);
+        var end = L.marker([LatLon[0], LatLon[1]]);
+        var line = L.polyline([marker.getLatLng(), end.getLatLng()])
+        var LineLayer = L.layerGroup([end]).addLayer(line).addTo(mymap);
+        //var end = L.marker([LatLon[0], LatLon[1]]).addTo(mymap);
+        //var line = L.polyline([marker.getLatLng(), end.getLatLng()]).addTo(mymap);
   }
+  return LineLayer;
+  //return line;
 }

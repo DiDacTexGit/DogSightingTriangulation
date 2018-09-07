@@ -9,12 +9,14 @@ $("document").ready(function() {
   // ----------------Markers ---------------------
   var red, blue, na, allm; // These will be the markers for map
     //Seperate the markers into red/blue/other
+    var bluemarker  = [];
   var redmarker   = [];
   var namarker    = [];
   var overlaymarkers;
   var allMarkers = [];
   var markers = {};
   var baseMaps;
+  var line;
   // map context
   var mymap;
   var DAYTON = [39.7589, -84.1916];  // Var to point the map too
@@ -24,7 +26,7 @@ $("document").ready(function() {
 
   function drawmarkers(infoTemplate, locations){
     var len      = locations.length;
-    var bluemarker  = [];
+
     var location;
     for (i = 0; i < len; i++) {
         location  = locations[i];
@@ -46,37 +48,32 @@ $("document").ready(function() {
             marker = this;
             location.latitude  = marker.getLatLng().lat;
             location.longitude = marker.getLatLng().lng;
+            var strToParse = marker.getPopup().getContent();
+            var el = document.createElement('html');
+            el.innerHTML  = strToParse
+            location.name = el.getElementsByTagName("H2")[0].innerHTML;
+            location.description  = el.getElementsByTagName("p")[0].innerHTML.substring(5);
+            location.phone = el.getElementsByTagName("p")[1].innerHTML.substring(6);
             marker.bindPopup(L.Util.template(infoTemplate,location));
-        });
-           /*
-           location.latitude  = marker.getLatLng().lat;
-           location.longitude = marker.getLatLng().lng;
+            $('#selectedAddress').text("pp up: "+marker.getPopup().getContent());
+            var newline =[];
+            newline.push(marker);
+            mymap.removeLayer(line);
+            //removeLayer(LineLayer).removeFrom(mymap);
+          //  L.layerGroup().clearLayers();
+            line=drawLine(newline, mymap);
 
-          //updateLatLng(marker.getLatLng().lat, marker.getLatLng().lng);
-            $('#selectedAddress').text("You clicked the map at latitude: " + location.latitude);
-            //$('#selectedAddress').text(e.layer.getMarkers().length + ' markers in it');
-            //$('#selectedAddress').text(' markers in it');
-            marker.removeFrom(mymap);
-            //blue.addLayer(this);
-            marker.addLayer(mymap);*/
-        //});
+        });
         $('#selectedAddress').text("Got Markers: "+ location.team);
         if (location.team      == "Blue"){
             bluemarker.push(marker);
-        $('#selectedAddress').text("Got Markers: "+ location.latitude);
         }else if (location.team == "Red") {
             redmarker.push(marker);
         }else{
             namarker.push(marker);
         }
     }
-    /*for(var i=0;i<bluemarker.length;i++){
-            bluemarker[i].on("dragend",   function (e) {
-                marker = this;
-                marker.bindPopup('LatLng: ' +marker.getLatLng()).openPopup();
-            $('#selectedAddress').text("yy: ");
-        });
-    }*/
+
     red   = L.markerClusterGroup().addLayers(redmarker);
     blue  =  L.markerClusterGroup().addLayers(bluemarker);
     //blue  = L.layerGroup(bluemarker);
@@ -84,9 +81,9 @@ $("document").ready(function() {
     allmarker = redmarker.concat(bluemarker);
     allmarker = allmarker.concat(namarker);
     //allm  =  L.markerClusterGroup().addLayers(allmarker);
-
     return allmarker
   }
+
 
   function updateLatLng(lat,lng,reverse) {
    $('#selectedAddress').text("here"+lat);
@@ -171,20 +168,16 @@ $("document").ready(function() {
    function getmarkers(){
       $.get('/data/callins.txt', function(data) {
          locations = read_in_markers(data);
-
          // infoTemplate is a string template for use with L.Util.template()
          var infoTemplate = '<h2>{name}</h2><p>Info: {description}</p>\
                              <p>Phone: {phone}</p>\
                              <p>Lat: {latitude}</p>\
                              <p>Long: {longitude}</p>';
-
        allmarker = drawmarkers(infoTemplate, locations);
        allm  =  L.markerClusterGroup().addLayers(allmarker);
        allm.addTo(mymap);
-
        // Now we can zoom the map to the extent of the markers
        mymap.fitBounds(allm.getBounds());
-
        //-------------Setting up the map ---------------
        overlaymarkers={
            "Red Team": red,
@@ -193,12 +186,10 @@ $("document").ready(function() {
            "Support":na,
            "All": allm
        }
-
        //L.control.l  ayers(overlaymarkers, baseMaps).addTo(mymap);
-       drawLine(bluemarker, mymap);
+       line= drawLine(bluemarker, mymap);
        $('#selectedAddress').text("Got DRAW");
        });//$.get()
-
        $('#selectedAddress').text("Here "+bluemarker.length.toString()+" End");
      }
 
