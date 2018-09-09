@@ -42,22 +42,43 @@ var tmp = sinU1 * sinSigma - cosU1 * cosSigma * cosAlpha1,
 var LatLon =  [toDeg(lat2), lon1 + toDeg(L)];
 return LatLon;
 };
-function drawLine(bluemarker, mymap){
+function drawLine(bluemarker, distances,mymap){
     var raw_dist = 500;
     var angle = 25;
-    var LatLon=[39.7316757, -84.27587];
+    var LatLon = [39, -84.];
     var end = L.marker([LatLon[0],LatLon[1]]).addTo(mymap);
+    var LineLayer = new L.layerGroup();
+    var ends=[];
+    var cicles =[];
     for (var i = 0; i < bluemarker.length; i++){
         marker = bluemarker[i];
-        //var end_x = marker.getLatLng().lng // * Math.cos(angle * Math.PI / 180);
-        //var end_y = start.getLatLng().lat;// + length// * Math.sin(angle * Math.PI / 180);
+        raw_dist = distances[i][0];
+        angle = distances[i][1];
+        var ra = raw_dist * 0.1;
         LatLon = destVincenty(marker.getLatLng().lat, marker.getLatLng().lng, angle,raw_dist);
         var end = L.marker([LatLon[0], LatLon[1]]);
-        var line = L.polyline([marker.getLatLng(), end.getLatLng()])
-        var LineLayer = L.layerGroup([end]).addLayer(line).addTo(mymap);
+        var line = L.polyline([marker.getLatLng(), end.getLatLng()]);
+        var colors = ['#f03','#E333FF','#afcba0']
+        if ( ra > 0 ) {
+           var circle = L.circle([LatLon[0], LatLon[1]],{
+            color: colors[i],
+            colorOpacity:0.5,
+            fillColor: colors[i],
+            fillOpacity: 0.45,
+            radius: ra
+            });
+           LineLayer.addLayer(circle);
+        }
+        //ends.push(end);
+        //lines.push(lines);
+      //  LineLayer.addLayer(end);
+        LineLayer.addLayer(line);
+
+         //LineLayer = L.layerGroup([end]).addLayer(line).addTo(mymap);
         //var end = L.marker([LatLon[0], LatLon[1]]).addTo(mymap);
         //var line = L.polyline([marker.getLatLng(), end.getLatLng()]).addTo(mymap);
   }
+  LineLayer.addTo(mymap);
+  //LineLayer = L.layerGroup(ends).addLayer(lines).addTo(mymap);
   return LineLayer;
-  //return line;
 }
