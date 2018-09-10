@@ -72,7 +72,6 @@ $("document").ready(function() {
       red   = L.markerClusterGroup().addLayers(redmarker);
       //blue  =  L.markerClusterGroup().addLayers(bluemarker);
       blue.addLayers(bluemarker);
-      //blue  = L.layerGroup(bluemarker);
       na    =  L.markerClusterGroup().addLayers(namarker);
       allmarker = redmarker.concat(bluemarker);
       allmarker = allmarker.concat(namarker);
@@ -104,14 +103,12 @@ $('#Direction_01').on('change',function(e){
 
 $('#Direction_00').on('change',function(e){
     textd =  this.options[this.selectedIndex].value;
-
     distances[0][1]= textd;
     updateDistances();
 });
 
 $('#Direction_02').on('change',function(e){
     textd =  this.options[this.selectedIndex].value;
-
     distances[2][1]= textd;
     updateDistances();
 });
@@ -178,11 +175,9 @@ $('#Direction_02').on('change',function(e){
   	  subdomains: 'abcd',
   	  ext: 'png'
     });
-
     // https: also suppported.
     Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
 	   attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-
     });
     //---------------------------------------
     // Map choices.----------
@@ -190,17 +185,16 @@ $('#Direction_02').on('change',function(e){
      "Street":Streetmap,
      "TopoMap":Stamen_Terrain,
      "WorldImagery":Esri_WorldImagery
-
     };
     // Set the Map ------------------------
     mymap = L.map('map',{
           layers:[Streetmap]
         }).setView(DAYTON, 15);
-   L.control.layers(baseMaps).addTo(mymap);
-   /*mymap.on('click', function(e) {
+    L.control.layers(baseMaps).addTo(mymap);
+    /*mymap.on('click', function(e) {
        alert("Lat, Lon : " + e.latlng.lat + ", " + e.latlng.lng)
-   })*/
-   mymap.on('click', function(e) {
+    })*/
+    mymap.on('click', function(e) {
         var popLocation= e.latlng;
         var popup = L.popup()
         .setLatLng(popLocation)
@@ -233,16 +227,15 @@ $('#Direction_02').on('change',function(e){
           }
           //L.control.l  ayers(overlaymarkers, baseMaps).addTo(mymap);
           LineLayerGroup= drawLine(bluemarker,distances, mymap);
-      //    $('#selectedAddress').text("Got DRAW");
           });//$.get()
-          }
+   }
 
 
    function initSite() {
-     $('#last_update').text(lastupdated);
      createMap();
      getmarkers();
    };
+
  initSite();
  //HTML5 input placeholder fix for < ie10
  $('input, textarea').placeholder();

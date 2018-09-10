@@ -4,8 +4,6 @@
    <head>
       <title>DiDacTex</title>
       <meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0">
-      <!--<link rel="stylesheet" href="styles/reset.css" />
-      //<link rel="stylesheet" href="styles/workshop.css" />-->
       <link rel="stylesheet" href="style/main.css" />
       <link rel="stylesheet" href="lib/leaflet-1.3/dist/leaflet.css" />
       <link rel="stylesheet" href="lib/leaflet.markercluster-1.4/dist/MarkerCluster.css" />
@@ -35,6 +33,7 @@
               <p> Bob's Guess:
               <input class="typeahead" id="DisInput_00" type="text" placeholder="Enter Distance: (Meters)" />
               <select id="Direction_00" >
+                <option value=45>NE
                 <option value=0>N
                 <option value=45>NE
                  <option value=90>E
@@ -47,18 +46,20 @@
                 <p> Jane's Guess:
                <input class="typeahead" id="DisInput_01" type="text" placeholder="Enter Distance: (Meters)" />
                <select id="Direction_01" >
+                   <option value=135>SE
                    <option value=0>N
                    <option value=45>NE
-                    <option value=90>E
-                    <option value=135>SE
-                    <option value=180>S
-                    <option value=225>SW
-                     <option value=270>W
-                     <option value=315>NW
+                   <option value=90>E
+                   <option value=135>SE
+                   <option value=180>S
+                   <option value=225>SW
+                   <option value=270>W
+                   <option value=315>NW
                  </select></p>
                    <p> Sues's Guess:
                <input class="typeahead" id="DisInput_02" type="text" placeholder="Enter Distance: (Meters)" />
                <select id="Direction_02" >
+                  <option value=315>NW
                    <option value=0>N
                    <option value=45>NE
                     <option value=90>E
@@ -116,7 +117,6 @@
       <script src="lib/leaflet.markercluster-1.4/dist/leaflet.markercluster-src.js"></script>
       <script src="lib/leaflet.awesomemarkers/leaflet.awesome-markers.min.js"></script>
       <script src="lib/typeahead/typeahead.bundle.min.js"></script>
-      <script src="data/reaps.json"></script>
       <script src="lib/jquery-placeholder/jquery.placeholder.min.js"></script>
      <script src="js/drawLine.js"></script>
      <script src="js/main.js"></script>
