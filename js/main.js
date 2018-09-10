@@ -205,7 +205,7 @@ $('#Direction_02').on('change',function(e){
    }
 
   function getmarkers(){
-         $.get('/data/callins.txt', function(data) {
+         $.get('./data/callins.txt', function(data) {
             locations = read_in_markers(data);
             // infoTemplate is a string template for use with L.Util.template()
             var infoTemplate = '<h2>{name}</h2><p>Info: {description}</p>\
