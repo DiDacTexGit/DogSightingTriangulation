@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
    <head>
       <title>DiDacTex</title>
       <meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0">
@@ -17,7 +17,7 @@
    <body>
       <div class="navbar">
          <div class="logo-container">
-            <a class="logo" href="#"><h2>DiDacTex Dog Sighting Triangulation</h2></a>
+            <a class="logo" href="#"><h1>DiDacTex Dog Sighting Triangulation</h1></a>
          </div>
       </div>
       <div class="mappanel">
@@ -30,10 +30,10 @@
          <div class="contentpanel searchpanel">
             <div id="custom-templates">
               <p> Enter Updated User's Distance and Direction</p>
-              <p> Bob's Guess:
-              <input class="typeahead" id="DisInput_00" type="text" placeholder="Enter Distance: (Meters)" />
-              <select id="Direction_00" >
-                <option value=45>NE
+              <label for="DisInput_00">Bob's  Guess:</label>
+              <input class="typeahead" id="DisInput_00" type="text" name="DisInput_00" placeholder="Enter Distance: (Meters)" />
+              <select id="Direction_00" aria-label="Select Direction" name="select" >
+                <option value=45 selected>NE
                 <option value=0>N
                 <option value=45>NE
                  <option value=90>E
@@ -42,12 +42,12 @@
                  <option value=225>SW
                   <option value=270>W
                   <option value=315>NW
-              </select></p>
-                <p> Jane's Guess:
-               <input class="typeahead" id="DisInput_01" type="text" placeholder="Enter Distance: (Meters)" />
-               <select id="Direction_01" >
-                   <option value=135>SE
-                   <option value=0>N
+              </select></br>
+              <label for="DisInput_01">Jane's  Guess:</label>
+               <input class="typeahead" id="DisInput_01" type="text"  name="DisInput_01" placeholder="Enter Distance: (Meters)" />
+               <select id="Direction_01" aria-label="Select Direction" name="select" >
+                   <option value=135 selected>SE
+                   <option value=0  >N
                    <option value=45>NE
                    <option value=90>E
                    <option value=135>SE
@@ -55,11 +55,11 @@
                    <option value=225>SW
                    <option value=270>W
                    <option value=315>NW
-                 </select></p>
-                   <p> Sues's Guess:
+                 </select></br>
+                    <label for="DisInput_02">Sue's  Guess:</label>
                <input class="typeahead" id="DisInput_02" type="text" placeholder="Enter Distance: (Meters)" />
-               <select id="Direction_02" >
-                  <option value=315>NW
+               <select id="Direction_02" aria-label="Select Direction" name="select" >
+                  <option value=315 selected>NW
                    <option value=0>N
                    <option value=45>NE
                     <option value=90>E
@@ -80,15 +80,15 @@
 
          <div id="intropanel" class="intropanel">
             <div class="introcontainer">
-               <h1>Dog Triangulation Tool</h1>
+               <h2>Dog Triangulation Tool</h2>
                <p class="intro-paragraph"><strong>DiDacTex</strong> tool to triangulate a dog from multiple users sightings.
                </br> Need to know the users locations. </p>
                <div class="FAQcontainer">
                   <div id="FAQ-howto" class="FAQ-item">
-                     <h4><span class="expand-icon">+</span> How do I use this tool?</h4>
+                     <h3><span class="expand-icon">+</span> How do I use this tool?</h3>
                      <div id="FAQ-howto-expand" class="FAQ-expand">
                         <p> visual inspect people's location on the map.<br> click on the marker icons to get more information.
-                          <img class="small-balloon" src="./lib/leaflet-1.3/dist/images/marker-icon.png"></p>
+                          <img class="small-balloon" src="./lib/leaflet-1.3/dist/images/marker-icon.png" alt="small balloon"></p>
                           <p> Move people to update their location<br> </p>
                           <p> Update how far (m) where a person thinks the dog is.<br> </p>
                           <p> Click on the map to get the dog's location <br> </p>
@@ -107,7 +107,7 @@
             <div class="contentpanel footerpanel">
                <div class="footer">
                   <p class="footertext">Made with pride by</p>
-                  <a href="http://www.DiDacTex.com"><img class="logo firstlogo" src="./icons/logo.png" /></a>
+                  <a href="http://www.DiDacTex.com"><img class="logo firstlogo" src="./icons/logo.png" alt="DiDacTex Logo" /></a>
                </div>
             </div>
          </div>
