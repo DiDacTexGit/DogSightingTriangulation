@@ -1,5 +1,5 @@
 latitude	longitude	name	description team	phone	icon
 39.7361605	-84.1766685	Bob	The Intern	Blue	123-456-2789	male_blue
 39.74160192	-84.178371951	Jane	Cat person	Blue	123-345-6789	female_blue
-39.73664	-84.178524	Fred	Prank caller	Red	121-345-6789	male_red
+39.7382664	-84.1802524	Fred	Prank caller	Red	121-345-6789	male_red
 39.73664	-84.1715224	Sue	Dog walker	Blue	123-456-7890	female_blue
